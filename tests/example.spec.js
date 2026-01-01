@@ -17,8 +17,6 @@ test('has title', async ({ page }) => {
 
   await expect(page.locator('a[href="/logout"]')).toBeVisible();
 
-  await page.locator('a[href="/logout"]').waitFor({state: 'visible', timeout: 10000});
-
 });
 
 
