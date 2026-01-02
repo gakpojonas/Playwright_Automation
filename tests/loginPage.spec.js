@@ -44,7 +44,7 @@ test('Verify Login Failure with Invalid Password', async ({ page }) => {
 
   await page.locator('#submit-login').click();
 
-  await expect(page.locator('#flash b')).toHaveText('Your username is invalid!');
+  await expect(page.locator('#flash b')).toHaveText('Your password is invalid!');
 });
 
 
