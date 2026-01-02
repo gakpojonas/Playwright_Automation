@@ -33,4 +33,18 @@ test('Verify Login Failure with Invalid Username', async ({ page }) => {
   await expect(page.locator('#flash b')).toHaveText('Your username is invalid!');
 });
 
+test('Verify Login Failure with Invalid Password', async ({ page }) => {
+  await page.goto('https://practice.expandtesting.com/login');
+
+  let username = page.locator('#username');
+  let password = page.locator('#password');
+
+  await username.fill('practice');
+  await password.fill('WrongPassword123');
+
+  await page.locator('#submit-login').click();
+
+  await expect(page.locator('#flash b')).toHaveText('Your username is invalid!');
+});
+
 
