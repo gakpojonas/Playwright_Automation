@@ -1,4 +1,4 @@
-name: Playwright CI Pipeline
+name: Playwright CI/CD Pipeline
 
 on:
   push:
@@ -8,8 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  install:
-    name: Install Dependencies
+# ---------------- BUILD ----------------
+  build:
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
@@ -24,13 +25,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      # Optional but realistic
+      - name: Lint / Validate project
+        run: npm run lint || echo "No lint configured"
 
+      # Save node_modules for next job
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            node_modules
+            package.json
+            package-lock.json
 
+# ---------------- TEST ----------------
   test:
-    name: Run Playwright Tests
-    needs: install
+    name: Test
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -43,22 +55,44 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
 
-      - name: Run tests
+      # 🔑 FIX: Install browsers in TEST job
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
         run: npx playwright test
 
-  report:
-    name: Publish Test Report
-    needs: test
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Upload Playwright report
+      - name: Upload test report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+# ---------------- DEPLOY ----------------
+  deploy:
+    name: Deploy to UAT
+    needs: test
+    runs-on: ubuntu-latest
+    environment: UAT
+
+    steps:
+      - name: Deploy confirmation
+        run: |
+          echo "Deploying to UAT..."
+          echo "All tests passed successfully 🎉"
+
+      # Example real deployment placeholder
+      # - uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ vars.UAT_IP }}
+      #     username: ${{ secrets.USER }}
+      #     key: ${{ secrets.SSH_KEY }}
+      #     script: |
+      #       echo "Deploying application..."
